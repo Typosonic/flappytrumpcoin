@@ -82,60 +82,63 @@
       <!-- Supabase Integration -->
       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
       <script>
-        const supabase = supabase.createClient(
-          'https://emcisitgikjvggvorhev.supabase.co',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2lzaXRnaWtqdmdndm9yaGV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMjQ1MTYsImV4cCI6MjA2MjkwMDUxNn0.Q3mpjsmw8Eha8iXXhjIxJNkv1ToDjNoxMsqCJr_cBZM'
-        );
+        // Wait for Supabase to load
+        window.addEventListener('load', function() {
+          // Initialize Supabase client
+          const supabaseUrl = 'https://emcisitgikjvggvorhev.supabase.co';
+          const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2lzaXRnaWtqdmdndm9yaGV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMjQ1MTYsImV4cCI6MjA2MjkwMDUxNn0.Q3mpjsmw8Eha8iXXhjIxJNkv1ToDjNoxMsqCJr_cBZM';
+          const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function sendScoreToBackend(wallet, score) {
-          if (!wallet) return; // Don't send score if no wallet is connected
-          
-          const { data, error } = await supabase
-            .from('leaderboard')
-            .insert([{ wallet, score }]);
+          async function sendScoreToBackend(wallet, score) {
+            if (!wallet) return; // Don't send score if no wallet is connected
+            
+            const { data, error } = await supabase
+              .from('leaderboard')
+              .insert([{ wallet, score }]);
 
-          if (error) {
-            console.error("Score upload failed:", error);
-          } else {
-            console.log("Score saved!", data);
-          }
-        }
-
-        // Wallet UI logic
-        let walletAddress = undefined;
-        function shortenAddress(addr) {
-          return addr ? addr.slice(0, 4) + '...' + addr.slice(-4) : '';
-        }
-        async function connectWallet() {
-          if (window.solana && window.solana.isPhantom) {
-            try {
-              const resp = await window.solana.connect();
-              walletAddress = resp.publicKey.toString();
-              updateWalletUI();
-            } catch (e) {
-              alert('Wallet connection failed.');
+            if (error) {
+              console.error("Score upload failed:", error);
+            } else {
+              console.log("Score saved!", data);
             }
-          } else {
-            alert('Phantom wallet not found!');
           }
-        }
-        function updateWalletUI() {
-          const el = document.getElementById('wallet-ui');
-          if (!walletAddress) {
-            el.textContent = 'Connect Wallet';
-          } else {
-            el.textContent = 'Wallet: ' + shortenAddress(walletAddress);
+
+          // Wallet UI logic
+          let walletAddress = undefined;
+          function shortenAddress(addr) {
+            return addr ? addr.slice(0, 4) + '...' + addr.slice(-4) : '';
           }
-        }
-        
-        // Prevent click event from propagating to the game
-        document.getElementById('wallet-ui').addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (!walletAddress) connectWallet();
+          async function connectWallet() {
+            if (window.solana && window.solana.isPhantom) {
+              try {
+                const resp = await window.solana.connect();
+                walletAddress = resp.publicKey.toString();
+                updateWalletUI();
+              } catch (e) {
+                alert('Wallet connection failed.');
+              }
+            } else {
+              alert('Phantom wallet not found!');
+            }
+          }
+          function updateWalletUI() {
+            const el = document.getElementById('wallet-ui');
+            if (!walletAddress) {
+              el.textContent = 'Connect Wallet';
+            } else {
+              el.textContent = 'Wallet: ' + shortenAddress(walletAddress);
+            }
+          }
+          
+          // Prevent click event from propagating to the game
+          document.getElementById('wallet-ui').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!walletAddress) connectWallet();
+          });
+          
+          updateWalletUI();
         });
-        
-        updateWalletUI();
       </script>
    </body>
 </html>
