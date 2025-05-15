@@ -127,9 +127,14 @@
             el.textContent = 'Wallet: ' + shortenAddress(walletAddress);
           }
         }
-        document.getElementById('wallet-ui').onclick = function() {
+        
+        // Prevent click event from propagating to the game
+        document.getElementById('wallet-ui').addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
           if (!walletAddress) connectWallet();
-        };
+        });
+        
         updateWalletUI();
       </script>
    </body>
