@@ -330,68 +330,40 @@ function setMedal()
 
 function playerDead()
 {
-   // Prevent multiple explosions
-   if (window.explosionShown) return;
-   window.explosionShown = true;
+   //stop the loops
+   clearInterval(loopGameloop);
+   clearInterval(loopPipeloop);
 
-   //stop animating everything!
+   //stop the music
+   soundHit.play();
+   soundDie.play();
+
+   //make everything stop animated
    $(".animated").css('animation-play-state', 'paused');
    $(".animated").css('-webkit-animation-play-state', 'paused');
 
-   // Show explosion
-   var $player = $("#player");
-   var playerOffset = $player.offset();
-   var playerWidth = $player.width();
-   var playerHeight = $player.height();
-   var $explosion = $('<img id="explosion" src="assets/explosion.png" style="position:absolute; z-index:9999; pointer-events:none;">');
-   $explosion.css({
-      left: playerOffset.left + playerWidth/2 - 64, // assuming explosion.png is 128x128
-      top: playerOffset.top + playerHeight/2 - 64,
-      width: '128px',
-      height: '128px',
-      display: 'block'
-   });
-   $("body").append($explosion);
-
    //drop the bird to the floor
-   var playerbottom = $player.position().top + $player.width(); //we use width because he'll be rotated 90 deg
+   var playerbottom = $("#player").position().top + $("#player").width(); //we use width because he'll be rotated 90 deg
    var floor = flyArea;
-   var movey = Math.max(0, floor - playerbottom);
-   $player.transition({ y: movey + 'px', rotate: 90}, 1000, 'easeInOutCubic');
+   var movey = Math.min(floor - playerbottom + 75, 600);
 
-   //it's time to change states. as of now we're considered ScoreScreen to disable left click/flying
-   currentstate = states.ScoreScreen;
+   //first move him down
+   $("#player").transition({ y: movey + 'px', rotate: 90 }, 1000, 'easeInOut');
 
-   //destroy our gameloops
-   clearInterval(loopGameloop);
-   clearInterval(loopPipeloop);
-   loopGameloop = null;
-   loopPipeloop = null;
-
-   // Show explosion for 1 second, then show score and call backend
+   //then in preparation for next game, rotate him back to the start rotation
    setTimeout(function() {
-      $('#explosion').remove();
-      // Call backend function (walletAddress must be defined elsewhere)
-      if (typeof sendScoreToBackend === 'function' && typeof walletAddress !== 'undefined') {
-         sendScoreToBackend(walletAddress, score);
-      }
-      //mobile browsers don't support buzz bindOnce event
-      if(isIncompatible.any())
-      {
-         //skip right to showing score
-         showScore();
-      }
-      else
-      {
-         //play the hit sound (then the dead sound) and then show score
-         soundHit.play().bindOnce("ended", function() {
-            soundDie.play().bindOnce("ended", function() {
-               showScore();
-            });
-         });
-      }
-      window.explosionShown = false;
+      $("#player").css({ rotate: 0 });
    }, 1000);
+
+   //show the score screen after a short delay
+   setTimeout(function() {
+      showScore();
+   }, 1500);
+
+   // Send score to Supabase if wallet is connected
+   if (typeof walletAddress !== 'undefined' && walletAddress) {
+      sendScoreToBackend(walletAddress, score);
+   }
 }
 
 function showScore()
