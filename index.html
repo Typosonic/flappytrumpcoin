@@ -89,19 +89,27 @@
           const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2lzaXRnaWtqdmdndm9yaGV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMjQ1MTYsImV4cCI6MjA2MjkwMDUxNn0.Q3mpjsmw8Eha8iXXhjIxJNkv1ToDjNoxMsqCJr_cBZM';
           const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-          async function sendScoreToBackend(wallet, score) {
-            if (!wallet) return; // Don't send score if no wallet is connected
-            
-            const { data, error } = await supabase
-              .from('leaderboard')
-              .insert([{ wallet, score }]);
-
-            if (error) {
-              console.error("Score upload failed:", error);
-            } else {
-              console.log("Score saved!", data);
+          // Make sendScoreToBackend available globally
+          window.sendScoreToBackend = async function(wallet, score) {
+            if (!wallet) {
+              console.log("No wallet connected, skipping score submission");
+              return;
             }
-          }
+            
+            try {
+              const { data, error } = await supabase
+                .from('leaderboard')
+                .insert([{ wallet, score }]);
+
+              if (error) {
+                console.error("Score upload failed:", error);
+              } else {
+                console.log("Score saved successfully!", data);
+              }
+            } catch (err) {
+              console.error("Error sending score:", err);
+            }
+          };
 
           // Wallet UI logic
           let walletAddress = undefined;
